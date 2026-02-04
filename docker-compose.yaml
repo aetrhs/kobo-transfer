@@ -1,0 +1,36 @@
+services:
+  # mongodb (using official image)
+  mongodb:
+    image: mongo:latest
+    container_name: kobo-db
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  # backend/rest api
+  backend:
+    build: ./server
+    container_name: kobo-backend
+    ports:
+      - "5000:5000" #left is host port, right is docker container port
+    env_file:
+      - ./server/.env
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/kobo_library
+      - JWT_SECRET=pleribus2
+    depends_on:
+      - mongodb
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+      - ./client/dist:/client/dist
+    command: npm run dev
+
+  # kepubify
+  kepubify:
+    build: ./kepubify
+    container_name: kobo-converter
+volumes:
+  mongo_data: #for user data
+  book_storage: #for ebook files
