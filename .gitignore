@@ -5,5 +5,3 @@
 server/uploads/*
 mongo_data/
 book_storage/
-
-kepubify/kepubify

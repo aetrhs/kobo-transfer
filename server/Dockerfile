@@ -1,16 +1,14 @@
-FROM node:20-alpine AS kepubify_source
-COPY --from=kobo-library-kepubify /usr/local/bin/kepubify /usr/local/bin/kepubify
-
-FROM node:20-alpine
+FROM node:20-slim
 WORKDIR /app
 
-COPY --from=kepubify_source /usr/local/bin/kepubify /usr/local/bin/kepubify
-RUN chmod +x /usr/local/bin/kepubify
-
 COPY package*.json ./
-RUN npm install
+RUN npm install --omit=dev
 
 COPY . .
 
+RUN chmod +x bin/kepubify && cp bin/kepubify /usr/local/bin/kepubify
+
+RUN mkdir -p uploads
+
 EXPOSE 5000
-CMD ["npm", "run", "dev"]
+CMD ["node", "server.js"]
