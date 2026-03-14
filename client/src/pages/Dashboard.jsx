@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 function Dashboard() {
@@ -6,7 +7,7 @@ function Dashboard() {
   const [books, setBooks] = useState([]);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-
+  const navigate = useNavigate();
   const getHeaders = () => ({
     Authorization: `Bearer ${localStorage.getItem('token')}`
   });
@@ -59,6 +60,28 @@ function Dashboard() {
     }
   };
 
+  const handleDelete = async (e, bookId) => {
+    e.preventDefault();
+
+    if (!window.confirm("Are you sure you want to remove this book?")) return;
+
+    try {
+      const response = await fetch(`/api/books/delete/${bookId}?token=${localStorage.getItem('token')}`, {
+        method: 'DELETE',
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        navigate('/dashboard');
+      } else {
+        alert("Error deleting book: " + data.error);
+      }
+    } catch (err) {
+      console.error("Delete request failed:", err);
+      alert("Could not connect to the server.");
+    }
+  };
   const logout = () => {
     localStorage.clear();
     window.location.href = '/';
@@ -78,7 +101,7 @@ function Dashboard() {
       <section className="mb-12 p-4 border-2 border-black">
         <h3 className="font-bold uppercase mb-2">Add Ebook</h3>
         <form onSubmit={handleUpload} className="flex flex-col gap-3">
-          <input type="file" accept=".epub,.pdf" onChange={(e) => setFile(e.target.files[0])} className="text-sm"/>
+          <input type="file" accept=".epub,.pdf" onChange={(e) => setFile(e.target.files[0])} className="text-sm" />
           <button type="submit" className="bg-gray-600 text-white p-2 font-bold">Upload Book</button>
         </form>
       </section>
@@ -95,12 +118,14 @@ function Dashboard() {
                   <div className="font-bold text-lg">{book.title}</div>
                   <div className="text-xs font-medium opacity-70">{book.author}</div>
                 </div>
-                
+
                 <div className='mr-0 flex'>
                   <a href={`/api/books/download/${book._id}?token=${localStorage.getItem('token')}`}
                     className="bg-black text-white px-6 py-2 font-black text-sm rounded" download>Download</a>
-                  <a href={`/api/books/delete/${book._id}?token=${localStorage.getItem('token')}`}
-                  className="underline px-6 py-2 font-black text-sm">Remove</a>
+                  <button
+                    onClick={(e) => handleDelete(e, book._id)}
+                    className="underline px-6 py-2 font-black text-sm cursor-pointer border-none bg-transparent"
+                  >Remove</button>
                 </div>
               </div>
             ))}

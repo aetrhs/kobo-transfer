@@ -36,40 +36,35 @@ function Signup() {
 
   return (
     <div className="max-w-md mx-auto p-8 mt-10 text-center">
-      <h2 className="text-2xl mb-6">Register account</h2>
+      <h2 className="text-lg mb-6 font-bold">Register with Us</h2>
 
       {!registeredPin ? (
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <input type="email" placeholder="Email"
-            required onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-          />
-          <input type="password"  placeholder="Password" required
-            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-          />
-          <button type="submit" disabled={loading}
-            className='p-3 bg-black rounded text-white'
-          >{loading ? 'Processing...' : 'Register'}
+          <input type="email" placeholder="Email Address" className="p-2 border border-gray-500 rounded"
+            required onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
+          <input type="password" placeholder="Password" className="p-2 border border-gray-500 rounded"
+            required onChange={(e) => setFormData({ ...formData, password: e.target.value })} />
+
+          <button  type="submit"  disabled={loading}  className="bg-black text-white p-3 font-bold uppercase border-2 border-black disabled:bg-gray-800" >
+            {loading ? 'Processing...' : 'Register'}
           </button>
-          <p className="mt-4 text-sm">
+
+          <p className="mt-6 text-sm">
             Already have an account? <Link to="/" className="underline font-bold">Back to Login</Link>
           </p>
         </form>
       ) : (
         <div className="space-y-6">
-          <div className="p-4">
-            <h3 className="text-lg font-bold">Success!</h3>
-            <p className="mt-2 text-sm">The login PIN for Kobo is:</p>
-            <div className="text-4xl font-mono font-bold mt-4 p-2">
+          <div className="p-4 border border-gray-500 rounded bg-gray-50">
+            <h3 className="text-lg font-bold uppercase">Success!</h3>
+            <p className="mt-2 text-sm text-gray-600">Your login PIN for Kobo is:</p>
+            <div className="text-4xl font-mono font-bold mt-4 p-4 tracking-widest border-t border-gray-200">
               {registeredPin}
             </div>
           </div>
 
-          <button
-            onClick={() => navigate('/')}
-            className="w-full bg-black text-white p-3 font-bold uppercase"
-          >
-            Go to Login
-          </button>
+          <button onClick={() => navigate('/')}
+            className="w-full bg-black text-white p-3 font-bold uppercase border-2 border-black">Go to Login</button>
         </div>
       )}
     </div>

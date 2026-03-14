@@ -31,7 +31,7 @@ function App() {
     <Router>
       <div className="flex flex-col min-h-screen items-center">
         <Navbar />
-        <main className="w-full max-w-3xl p-5">
+        <main className="w-full p-5">
           <Routes>
             <Route path="/" element={token ? <Navigate to="/dashboard" /> : <Login />} />
             <Route path="/login" element={token ? <Navigate to="/dashboard" /> : <Login />} />
