@@ -3,6 +3,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { spawn } = require('child_process');
+const epubMetadata = require('epub-metadata');
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -30,7 +31,7 @@ const fileFilter = (req, file, cb) => {
   if (extname || allowedMimes.includes(file.mimetype)) {
     return cb(null, true);
   } else {
-    cb(new Error('Format not supported. Please upload .epub, .pdf, or .mobi'));
+    cb(new Error('Invalid format. Please upload .epub, .pdf, or .mobi'));
   }
 };
 
@@ -45,13 +46,54 @@ exports.uploadBook = (req, res) => {
     if (err) return res.status(500).json({ error: err.message });
 
     try {
+      const filePath = req.file.path;
+      let author = "Unknown Author";
+      let title = req.body.title || req.file.originalname;
+
+      try {
+        const metadata = await epubMetadata(filePath);
+        console.log('extracted metadata:', metadata);
+        if (metadata.creator) author = metadata.creator.text;
+        console.log('author = ', author);
+        if (metadata.title) title = metadata.title;
+      } catch (metaErr) {
+        console.log("Metadata extraction failed, falling back to filename:", metaErr.message);
+      }
+
+      const getMainTitle = (str) => {
+        // get title up until first . (remove file extensions) or first '('
+        const match = str.match(/^[^(\.]+/);
+        const core = match ? match[0] : str;
+        return core.toLowerCase().replace(/[_\-]/g, ' ').replace(/\s+/g, ' ').trim();
+      };
+
+      const cleanedTitle = getMainTitle(title);
+      console.log('cleanedTitle = ', cleanedTitle);
+      const userBooks = await Book.find({ owner: req.user.id });
+
+      const isDuplicate = userBooks.some(book => {
+        const existingCleaned = getMainTitle(book.title);
+        console.log(`cleanedTitle: "${cleanedTitle}\nexistingCleaned: "${existingCleaned}"`);
+        return existingCleaned === cleanedTitle;
+      });
+
+      if (isDuplicate) {
+        return res.status(400).json({
+          error: "Duplicate Title",
+          message: `A similar book called "${title}" has already been uploaded.`
+        });
+      }
+
       const newBook = new Book({
-        title: req.body.title || req.file.originalname,
+        title: title,
+        author: author,
         fileName: req.file.filename,
-        format: path.extname(req.file.originalname).replace('.', '').toLowerCase(), // saves 'pdf', 'mobi', etc.
-        owner: req.user.id, // get this from user middleware
+        format: path.extname(req.file.originalname).replace('.', '').toLowerCase(),
+        owner: req.user.id,
         metadata: {
-          description: req.body.description
+          description: req.body.description,
+          publisher: req.body.publisher,
+          language: req.body.language
         }
       });
 
@@ -84,15 +126,15 @@ exports.download = async (req, res) => {
     const uploadDir = '/app/uploads';
     const originalFilePath = path.join(uploadDir, book.fileName);
 
-    const cleanFileName = book.fileName.includes('-') 
-    ? book.fileName.split('-').slice(1).join('-') 
-    : book.fileName;
-    
+    const cleanFileName = book.fileName.includes('-')
+      ? book.fileName.split('-').slice(1).join('-')
+      : book.fileName;
+
     let fileToServe = originalFilePath;
     let fileNameToServe = cleanFileName;
 
     // todo: change || to &&
-    if (userAgent.includes('Kobo') || book.fileName.toLowerCase().endsWith('.epub')) {
+    if (userAgent.includes('Kobo') && book.fileName.toLowerCase().endsWith('.epub')) {
 
       const kepubFileName = book.fileName.replace(/\.epub$/i, '_converted.kepub.epub');
       const kepubFilePath = path.join(uploadDir, kepubFileName);
@@ -130,6 +172,10 @@ exports.download = async (req, res) => {
         fileNameToServe = finalCleanedName;
       }
     }
+
+    // mark status as downloaded
+    book.isDownloaded = true;
+    await book.save();
 
     // download
     res.download(fileToServe, fileNameToServe, (err) => {

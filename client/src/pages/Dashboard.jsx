@@ -7,6 +7,7 @@ function Dashboard() {
   const [books, setBooks] = useState([]);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [uploadError, setUploadError] = useState('');
   const navigate = useNavigate();
   const getHeaders = () => ({
     Authorization: `Bearer ${localStorage.getItem('token')}`
@@ -37,6 +38,7 @@ function Dashboard() {
 
   const handleUpload = async (e) => {
     e.preventDefault();
+    setUploadError('');
     if (!file) return alert("Please select a file first");
 
     const formData = new FormData();
@@ -50,13 +52,14 @@ function Dashboard() {
         }
       });
 
-      alert("Success!");
+      alert("Book uploaded!");
       if (res.data.book) {
         setBooks([res.data.book, ...books]);
       }
       setFile(null);
     } catch (err) {
-      alert("Upload failed: " + (err.response?.data?.error || "Server error"));
+      const serverMessage = err.response?.data?.message || err.response?.data?.error || "Server error";
+      setUploadError(serverMessage);
     }
   };
 
@@ -66,72 +69,58 @@ function Dashboard() {
     if (!window.confirm("Are you sure you want to remove this book?")) return;
 
     try {
-      const response = await fetch(`/api/books/delete/${bookId}?token=${localStorage.getItem('token')}`, {
-        method: 'DELETE',
+      const res = await axios.delete(`/api/books/delete/${bookId}`, {
+        headers: getHeaders()
       });
 
-      const data = await response.json();
-
-      if (data.success) {
-        navigate('/dashboard');
+      if (res.data.success) {
+        setBooks(books.filter(book => book._id !== bookId));
       } else {
-        alert("Error deleting book: " + data.error);
+        alert("Error deleting book: " + res.data.error);
       }
     } catch (err) {
-      console.error("Delete request failed:", err);
-      alert("Could not connect to the server.");
+      console.error("Delete book failed:", err);
     }
-  };
-  const logout = () => {
-    localStorage.clear();
-    window.location.href = '/';
   };
 
   if (loading) return <div className="p-10 font-bold">Loading...</div>;
 
   return (
-    <div className="max-w-4xl mx-auto p-5">
-      <header className="border-b-4 border-black pb-4 mb-8 flex justify-between items-end">
-        <div>
-          <h1 className="text-3xl font-bold">My Library</h1>
-        </div>
-        <button onClick={logout} className="text-sm font-bold underline">EXIT</button>
-      </header>
-
-      <section className="mb-12 p-4 border-2 border-black">
-        <h3 className="font-bold uppercase mb-2">Add Ebook</h3>
+    <div className="flex flex-col gap-8 w-full p-5">
+      <div className="p-4 border-2 border-[#E4BB97] rounded">
+        <h3 className="font-bold mb-2">Add E-Book</h3>
         <form onSubmit={handleUpload} className="flex flex-col gap-3">
           <input type="file" accept=".epub,.pdf" onChange={(e) => setFile(e.target.files[0])} className="text-sm" />
-          <button type="submit" className="bg-gray-600 text-white p-2 font-bold">Upload Book</button>
+          {uploadError && (
+            <p className="text-red-600 font-bold text-sm bg-red-50 p-2 border border-red-200">{uploadError}</p>
+          )}
+          <button type="submit" className="text-sm p-2 font-bold w-full mx-auto max-w-sm">Upload Book</button>
         </form>
-      </section>
+      </div>
 
-      <section>
+      <div>
         <h2 className="text-xl font-bold mb-4">Available Books</h2>
         {books.length === 0 ? (
           <p className="italic text-gray-600">No books found in your account.</p>
         ) : (
           <div className="flex flex-col gap-2">
             {books.map((book) => (
-              <div key={book._id} className="flex flex-row border-t-2 border-b-0 border-r-0 border-l-0 border-black p-4 justify-between items-center group">
-                <div className="flex-1 pr-4">
-                  <div className="font-bold text-lg">{book.title}</div>
+              <div key={book._id}
+                className="flex flex-row gap-1 border-t-2 border-b-0 border-r-0 border-l-0 border-black justify-between items-center group">
+                <div className="flex-1 py-4">
+                  <div className="text-md text-wrap">{book.title}</div>
                   <div className="text-xs font-medium opacity-70">{book.author}</div>
                 </div>
 
                 <div className='mr-0 flex'>
-                  <a href={`/api/books/download/${book._id}?token=${localStorage.getItem('token')}`}
-                    className="bg-black text-white px-6 py-2 font-black text-sm rounded" download>Download</a>
-                  <button
-                    onClick={(e) => handleDelete(e, book._id)}
-                    className="underline px-6 py-2 font-black text-sm cursor-pointer border-none bg-transparent"
-                  >Remove</button>
+                  <button onClick={(e) => handleDelete(e, book._id)}
+                    className="px-6 py-2 font-bold uppercase text-sm cursor-pointer bg-transparent">Remove</button>
                 </div>
               </div>
             ))}
           </div>
         )}
-      </section>
+      </div>
     </div>
   );
 }

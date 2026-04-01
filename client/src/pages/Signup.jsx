@@ -35,7 +35,7 @@ function Signup() {
   };
 
   return (
-    <div className="max-w-md mx-auto p-8 mt-10 text-center">
+    <div className="w-full max-w-md m-auto px-10 mt-10 text-center">
       <h2 className="text-lg mb-6 font-bold">Register with Us</h2>
 
       {!registeredPin ? (
@@ -45,13 +45,11 @@ function Signup() {
           <input type="password" placeholder="Password" className="p-2 border border-gray-500 rounded"
             required onChange={(e) => setFormData({ ...formData, password: e.target.value })} />
 
-          <button  type="submit"  disabled={loading}  className="bg-black text-white p-3 font-bold uppercase border-2 border-black disabled:bg-gray-800" >
+          <button  type="submit"  disabled={loading}  className="p-3 font-bold uppercase" >
             {loading ? 'Processing...' : 'Register'}
           </button>
 
-          <p className="mt-6 text-sm">
-            Already have an account? <Link to="/" className="underline font-bold">Back to Login</Link>
-          </p>
+          <p className="mt-6 text-sm"> Already have an account? <Link to="/" className="underline font-bold">Back to Login</Link></p>
         </form>
       ) : (
         <div className="space-y-6">
@@ -63,8 +61,8 @@ function Signup() {
             </div>
           </div>
 
-          <button onClick={() => navigate('/')}
-            className="w-full bg-black text-white p-3 font-bold uppercase border-2 border-black">Go to Login</button>
+          <button onClick={() => window.location.href = '/'}
+            className="w-full p-3 font-bold uppercase">Go to Login</button>
         </div>
       )}
     </div>

@@ -113,3 +113,25 @@ exports.login = async (req, res) => {
     res.status(400).json({ success: false, error: err.message });
   }
 };
+
+// change pw 
+exports.changePassword = async (req, res) => {
+  try {
+    const { password } = req.body;
+    if (!password || password.length < 8) {
+      return res.status(400).json({ error: "Password must be at least 8 characters long." });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    await User.findByIdAndUpdate(req.user.id, {
+      password: hashedPassword
+    });
+
+    res.status(200).json({ success: true, message: "Password updated!" });
+  } catch (err) {
+    console.error("Change password error:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};

@@ -3,13 +3,15 @@ import axios from 'axios';
 import { BrowserRouter as Router, Routes, Route, Navigate, Link, useNavigate } from 'react-router-dom';
 import Signup from './pages/Signup.jsx';
 import Dashboard from './pages/Dashboard.jsx';
+import Profile from './pages/Profile.jsx';
+import userIcon from './assets/user.png';
 
-function Navbar() {
+function Navbar({ user }) {
   const navigate = useNavigate();
   const token = localStorage.getItem('token');
 
   return (
-    <nav className="w-full py-4 border-b-2 border-black flex gap-4 justify-center">
+    <nav className="w-full py-4 bg-[#D6E3F8] flex flex-row gap-10 justify-between items-center px-5 md:px-10 xl:px-60 border-b-2 border-[#bcd1f3]">
       {!token ? (
         <>
           <Link to="/">Login</Link>
@@ -18,6 +20,9 @@ function Navbar() {
       ) : (
         <>
           <Link to="/dashboard" className="font-bold">My Library</Link>
+          <Link to="/profile" className="">
+            <img src={userIcon} alt="User" className="w-6 h-6" />
+          </Link>
         </>
       )}
     </nav>
@@ -25,21 +30,36 @@ function Navbar() {
 }
 
 function App() {
-  const [token, setToken] = useState(localStorage.getItem('token'));
-  console.log('page loaded');
+  const [user, setUser] = useState(null);
+  const token = localStorage.getItem('token');
+
+  // get user data
+  useEffect(() => {
+    const fetchUser = async () => {
+      if (!token) return;
+      try {
+        const res = await axios.get('/api/auth/profile', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setUser(res.data);
+      } catch (err) {
+        console.error("get user data failed", err);
+      }
+    };
+    fetchUser();
+  }, [token]);
+
   return (
     <Router>
       <div className="flex flex-col min-h-screen items-center">
-        <Navbar />
-        <main className="w-full p-5">
+        <Navbar user={user} />
+        <main className="flex w-full max-w-4xl">
           <Routes>
             <Route path="/" element={token ? <Navigate to="/dashboard" /> : <Login />} />
             <Route path="/login" element={token ? <Navigate to="/dashboard" /> : <Login />} />
             <Route path="/signup" element={<Signup />} />
-
-            <Route path="/dashboard" element={
-              localStorage.getItem('token') ? <Dashboard /> : <Navigate to="/login" />
-            } />
+            <Route path="/dashboard" element={<Dashboard user={user} />} />
+            <Route path="/profile" element={<Profile user={user} />} />
           </Routes>
         </main>
       </div>
@@ -68,15 +88,19 @@ function Login() {
     e.preventDefault();
     const payload = isKobo ? { pin: pin.trim().toUpperCase() } : { email: email.trim().toLowerCase(), password: password };
     try {
-      console.log('HELLO');
       const res = await axios.post('/api/auth/login', payload);
+      // todo: remove this log
       console.log('login details entered', {
         email: res.data.user?.email,
         pin: res.data.user?.pin,
         success: res.data.success
       });
+
       if (res.data.success) {
         localStorage.setItem('token', res.data.token);
+        if (typeof setToken === 'function') {
+          setToken(res.data.token);
+        }
         window.location.href = '/dashboard';
       }
     } catch (err) {
@@ -86,33 +110,17 @@ function Login() {
   };
 
   return (
-    <div className="max-w-md mx-auto p-8 mt-10 text-center">
+    <div className="w-full max-w-md m-auto mt-10 px-10 text-center">
       <h2 className="text-lg mb-6 font-bold">Account Login </h2>
 
       <form onSubmit={loginFunc} className="flex flex-col gap-4">
-        {isKobo ? (
-          <div className='flex flex-row gap-2'>
-            <label className="mb-2 font-medium text-left">PIN:</label>
-            <input type="text" autoCapitalize="characters" autoCorrect="off" value={pin} maxLength="6" onChange={(e) => setPin(e.target.value)} 
-              className="text-3xl w-full text-center p-1 border border-gray-500 rounded font-mono uppercase"
-            />
-          </div>
-        ) : (
-          <>
-            <input type="email" placeholder="Email Address" className="p-2 border border-gray-500 rounded" onChange={(e) => setEmail(e.target.value)} required />
-            <input type="password" placeholder="Password" className="p-2 border border-gray-500 rounded" onChange={(e) => setPassword(e.target.value)} required />
-          </>
-        )}
+        <>
+          <input type="email" placeholder="Email Address" className="p-2 border border-gray-500 rounded" onChange={(e) => setEmail(e.target.value)} required />
+          <input type="password" placeholder="Password" className="p-2 border border-gray-500 rounded" onChange={(e) => setPassword(e.target.value)} required />
+        </>
 
-        <button type="submit" className="bg-black text-white p-3 font-bold uppercase border-2 border-black" >Log In </button>
+        <button type="submit" className="bg-blackp-3 font-bold uppercase" >Log In </button>
       </form>
-
-      <div className="mt-8 pt-4 text-left">
-        <p className="text-[10px] text-gray-600 break-all leading-tight">System Info: {userAgent}</p>
-        <div className="text-[10px] text-gray-600 mt-2 flex justify-between items-center">
-          <button onClick={() => setIsKobo(!isKobo)} className="underline cursor-pointer font-bold" > change {isKobo ? 'Web' : 'PIN'} mode </button>
-        </div>
-      </div>
 
       {!isKobo && (
         <p className="mt-6 text-sm">

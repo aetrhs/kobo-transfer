@@ -14,6 +14,7 @@ app.use(cors({
   origin: 'http://localhost:5173',
   credentials: true
 }));
+app.use('/api/covers', express.static(path.join(__dirname, 'uploads/covers')));
 
 // routes
 const authRoutes = require('./routes/authRoutes');
