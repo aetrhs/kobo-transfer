@@ -11,10 +11,12 @@ const app = express();
 // middleware
 app.use(express.json());
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: function (origin, callback) {
+    callback(null, true); // to not block localtunnel tests
+  },
   credentials: true
 }));
-app.use('/api/covers', express.static(path.join(__dirname, 'uploads/covers')));
+// app.use('/api/covers', express.static(path.join(__dirname, 'uploads/covers')));
 
 // routes
 const authRoutes = require('./routes/authRoutes');
@@ -29,7 +31,6 @@ mongoose.connect(MONGO_URI)
 
 app.use(express.static('public'));
 app.use('/api/auth', authRoutes);
-// app.use('/api/kobo', koboRoutes);
 app.use('/api/books', bookRoutes);
 app.use('/uploads', express.static('uploads'));
 
@@ -49,3 +50,10 @@ app.use(express.static(distPath));
 app.use((req, res) => {
   res.sendFile(path.join(distPath, 'index.html'));
 });
+
+app.close = async () => {
+  await mongoose.connection.close();
+  await server.close();
+};
+
+module.exports = app;

@@ -206,7 +206,8 @@
 
     function logout() {
       localStorage.removeItem('token');
-      window.location.reload();
+      sessionStorage.clear();
+      window.location.href = "/?logout=" + Date.now();
     }
   </script>
 </body>

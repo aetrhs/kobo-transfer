@@ -41,6 +41,13 @@ const upload = multer({
   limits: { fileSize: 500 * 1024 * 1024 }
 }).single('ebook');
 
+const getMainTitle = (str) => {
+  // get title up until first . (remove file extensions) or first '('
+  let core = str.includes('.') ? str.substring(0, str.lastIndexOf('.')) : str;
+  core = core.replace(/\s*\[[^\]]*\]/g, '').replace(/\s*\([^)]*\)/g, '');
+  return core.toLowerCase().replace(/[._\-]/g, ' ').replace(/\s+/g, ' ').trim();
+};
+
 exports.uploadBook = (req, res) => {
   upload(req, res, async (err) => {
     if (err) return res.status(500).json({ error: err.message });
@@ -59,13 +66,6 @@ exports.uploadBook = (req, res) => {
       } catch (metaErr) {
         console.log("Metadata extraction failed, falling back to filename:", metaErr.message);
       }
-
-      const getMainTitle = (str) => {
-        // get title up until first . (remove file extensions) or first '('
-        const match = str.match(/^[^(\.]+/);
-        const core = match ? match[0] : str;
-        return core.toLowerCase().replace(/[_\-]/g, ' ').replace(/\s+/g, ' ').trim();
-      };
 
       const cleanedTitle = getMainTitle(title);
       console.log('cleanedTitle = ', cleanedTitle);
@@ -207,3 +207,6 @@ exports.deleteBook = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+//for testing
+exports.getMainTitle = getMainTitle;
