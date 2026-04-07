@@ -59,16 +59,13 @@ exports.uploadBook = (req, res) => {
 
       try {
         const metadata = await epubMetadata(filePath);
-        console.log('extracted metadata:', metadata);
         if (metadata.creator) author = metadata.creator.text;
-        console.log('author = ', author);
         if (metadata.title) title = metadata.title;
       } catch (metaErr) {
         console.log("Metadata extraction failed, falling back to filename:", metaErr.message);
       }
 
       const cleanedTitle = getMainTitle(title);
-      console.log('cleanedTitle = ', cleanedTitle);
       const userBooks = await Book.find({ owner: req.user.id });
 
       const isDuplicate = userBooks.some(book => {
