@@ -68,7 +68,9 @@ function App() {
   return (
     <Router>
       <div className="flex flex-row min-h-screen overflow-hidden">
-        <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
+        {token && (
+          <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
+        )}
         <main className="flex flex-col h-auto w-full mx-auto top-0">
           <Navbar user={user} toggleSidebar={toggleSidebar} searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
           <Routes>

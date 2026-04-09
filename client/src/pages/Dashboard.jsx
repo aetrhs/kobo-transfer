@@ -71,11 +71,11 @@ function Dashboard({searchQuery}) {
         <div className='px-5 border-t-4 border-[#8D5B4C] w-[140px]'></div>
       </div>
         {filteredBooks.length === 0 ? (
-          <p className="italic text-gray-600">No books found.</p>
+          <p className="italic text-white">No books found.</p>
         ) : (
           <div className="flex flex-row flex-wrap gap-6 justify-start">
             {filteredBooks.map((book) => (
-              <div key={book._id} className="relative flex flex-col group w-full max-w-[160px] lg:max-w-[200px]">
+              <div key={book._id} className="relative flex flex-col group w-full max-w-[160px] md:max-w-[130px]">
               <div className="absolute top-2 right-2 z-10 transition-opacity">
                 <button onClick={() => setActiveMenu(activeMenu === book._id ? null : book._id)}
                   className="bg-white p-1.5 rounded-full shadow-md hover:bg-white text-silver-800">

@@ -54,7 +54,7 @@ function Profile({ user }) {
 
         <div>
           <h3 className="text-s uppercase font-bold text-[#C4BBAF] mb-2">Change Password :</h3>
-          <form onSubmit={changePassword} className="flex flex-col gap-3">
+          <form onSubmit={changePassword} className="flex flex-col gap-3 w-full">
             <div className='flex flex-row justify-between align-middle border border-gray-500 rounded bg-white focus-within:ring-2'>
               <input type={showPassword ? 'text' : 'password'} placeholder="New Password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
                 className="rounded p-2 text-sm w-max focus:outline-none" required />
@@ -63,7 +63,7 @@ function Profile({ user }) {
                 {showPassword ? EyeOffIcon : EyeIcon}
               </button>
             </div>
-            <button type="submit" className="bg-[#8D5B4C] text-white p-3 font-bold uppercase text-xs max-w-lg hover:border-[#5A2A27] hover:text-[#8D5B4C] hover:bg-white hover:transition-colors">
+            <button type="submit" className="bg-[#8D5B4C] text-white p-3 font-bold uppercase text-md max-w-lg hover:border-[#5A2A27] hover:bg-[#5A2A27]">
               Confirm Change
               </button>
             {message.text && (

@@ -26,13 +26,16 @@ const fileFilter = (req, file, cb) => {
   const allowedMimes = [
     'application/epub+zip',
     'application/pdf',
+    'application/x-pdf',
     'application/x-mobipocket-ebook',
-    'application/vnd.amazon.mobi8-export'
+    'application/vnd.amazon.mobi8-export',
+    'application/octet-stream'
   ];
 
   if (extname || allowedMimes.includes(file.mimetype)) {
     return cb(null, true);
   } else {
+    console.log(`Rejected file: ${file.originalname} with MIME type: ${file.mimetype}`);
     cb(new Error('Invalid format. Please upload .epub, .pdf, or .mobi'));
   }
 };
@@ -104,24 +107,28 @@ exports.uploadBook = (req, res) => {
   upload(req, res, async (err) => {
     if (err) return res.status(500).json({ error: err.message });
     const bookId = req.file.filename.split('-')[0];
-
+    const originalName = req.file.originalname;
+    const extension = path.extname(originalName).toLowerCase();
+    console.log("extension-", extension);
     try {
       const filePath = req.file.path;
       let author = "Unknown Author";
-      let title = req.body.title || req.file.originalname;
+      let title = req.body.title || originalName;
       let coverUrl = null;
 
-      try {
-        const metadata = await getEpubMetadata(filePath);
-        if (metadata.creator) author = metadata.creator.text || metadata.creator;
-        if (metadata.title) title = metadata.title;
+      if (extension === '.epub'){
+        try {
+          const metadata = await getEpubMetadata(filePath);
+          if (metadata.creator) author = metadata.creator.text || metadata.creator;
+          if (metadata.title) title = metadata.title;
 
-        // get book cover
-        coverUrl = await extractCover(filePath, bookId);
-        console.log("metadata extracted:", metadata);
-      } catch (metaErr) {
-        console.log("Metadata extraction failed, falling back to filename:", metaErr.message);
-
+          // get book cover
+          coverUrl = await extractCover(filePath, bookId);
+          console.log("metadata extracted:", metadata);
+        } catch (metaErr) {
+          console.log("Metadata extraction failed, falling back to filename:", metaErr.message);
+        }
+      } else {
         // get author from within brackets if cant extract metadata
         const authorMatch = originalName.match(/\(([^)]+)\)/);
         if (authorMatch) {
@@ -161,7 +168,7 @@ exports.uploadBook = (req, res) => {
           language: req.body.language
         }
       });
-
+      console.log("new book created:", newBook);
       await newBook.save();
       res.status(201).json({ success: true, book: newBook });
     } catch (dbErr) {
