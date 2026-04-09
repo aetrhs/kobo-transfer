@@ -3,7 +3,9 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { spawn } = require('child_process');
-const epubMetadata = require('epub-metadata');
+const { title } = require('process');
+// const epubMetadata = require('epub-metadata');
+const EPub = require("epub2").EPub;
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -48,21 +50,83 @@ const getMainTitle = (str) => {
   return core.toLowerCase().replace(/[._\-]/g, ' ').replace(/\s+/g, ' ').trim();
 };
 
+// using epub2 to get metadata
+// more reliable than epub-metadata
+const getEpubMetadata = (path) => {
+  return new Promise((resolve, reject) => {
+    const epub = new EPub(path);
+    epub.on("end", () => {
+      resolve({
+        title: epub.metadata.title,
+        creator: epub.metadata.creator,
+        publisher: epub.metadata.publisher,
+        coverId : epub.metadata.cover,
+        epub: epub
+      });
+    });
+    epub.on("error", (err) => reject(err));
+    epub.parse();
+  });
+};
+
+const extractCover = (filePath, bookId) => {
+  return new Promise((resolve) => {
+    const epub = new EPub(filePath);
+    epub.on('end', () => {
+      const coverId = epub.metadata.cover;
+      if (!coverId) return resolve(null);
+
+      epub.getImage(coverId, (err, data, mimeType) => {
+        if (err || !data) return resolve(null);
+
+        const ext = mimeType.split('/')[1] || 'jpg';
+        const coverFilename = `cover_${bookId}.${ext}`;
+        
+        const targetDir = '/app/uploads/covers'; 
+        const finalPath = path.join(targetDir, coverFilename);
+
+        if (!fs.existsSync(targetDir)) {
+          fs.mkdirSync(targetDir, { recursive: true });
+        }
+
+        fs.writeFile(finalPath, data, (writeErr) => {
+          if (writeErr) return resolve(null);
+          resolve(`/covers/${coverFilename}`);
+        });
+      });
+    });
+    epub.on('error', () => resolve(null));
+    epub.parse();
+  });
+};
+
 exports.uploadBook = (req, res) => {
   upload(req, res, async (err) => {
     if (err) return res.status(500).json({ error: err.message });
+    const bookId = req.file.filename.split('-')[0];
 
     try {
       const filePath = req.file.path;
       let author = "Unknown Author";
       let title = req.body.title || req.file.originalname;
+      let coverUrl = null;
 
       try {
-        const metadata = await epubMetadata(filePath);
-        if (metadata.creator) author = metadata.creator.text;
+        const metadata = await getEpubMetadata(filePath);
+        if (metadata.creator) author = metadata.creator.text || metadata.creator;
         if (metadata.title) title = metadata.title;
+
+        // get book cover
+        coverUrl = await extractCover(filePath, bookId);
+        console.log("metadata extracted:", metadata);
       } catch (metaErr) {
         console.log("Metadata extraction failed, falling back to filename:", metaErr.message);
+
+        // get author from within brackets if cant extract metadata
+        const authorMatch = originalName.match(/\(([^)]+)\)/);
+        if (authorMatch) {
+          author = authorMatch[1];
+        }
       }
 
       const cleanedTitle = getMainTitle(title);
@@ -75,6 +139,9 @@ exports.uploadBook = (req, res) => {
       });
 
       if (isDuplicate) {
+        // delete the file if its a duplicate to save space
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+
         return res.status(400).json({
           error: "Duplicate Title",
           message: `A similar book called "${title}" has already been uploaded.`
@@ -85,6 +152,7 @@ exports.uploadBook = (req, res) => {
         title: title,
         author: author,
         fileName: req.file.filename,
+        cover: coverUrl,
         format: path.extname(req.file.originalname).replace('.', '').toLowerCase(),
         owner: req.user.id,
         metadata: {
@@ -130,7 +198,6 @@ exports.download = async (req, res) => {
     let fileToServe = originalFilePath;
     let fileNameToServe = cleanFileName;
 
-    // todo: change || to &&
     if (userAgent.includes('Kobo') && book.fileName.toLowerCase().endsWith('.epub')) {
 
       const kepubFileName = book.fileName.replace(/\.epub$/i, '_converted.kepub.epub');
@@ -200,6 +267,7 @@ exports.deleteBook = async (req, res) => {
 
     await Book.findByIdAndDelete(id);
     res.json({ success: true });
+    console.log(`Book ${book.title} deleted successfully`);
   } catch (err) {
     res.status(500).json({ error: "Internal server error" });
   }

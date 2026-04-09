@@ -30,45 +30,42 @@ function Profile({ user }) {
       );
       setMessage({ text: "Password changed!", isError: false });
     } catch (err) {
-      setMessage({ text: "Password change failed.", isError: true });
+      setMessage({ text: "Error: Password change failed.", isError: true });
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.clear();
-    window.location.href = '/';
-  };
 
   return (
-    <div className="flex flex-col justify-center gap-4 mx-auto w-full p-5">
-      <h2 className="text-xl text-[#9D5C63] font-bold text-center">User Settings</h2>
+    <div className="flex flex-col gap-4 w-full p-5 mx-auto md:mx-5 md:max-w-[600px]">
+      <h2 className="text-2xl text-white font-bold text-center">User Settings</h2>
 
       <div className="flex flex-col gap-5">
         <div className="flex flex-col">
           <div className="flex flex-row gap-3 items-center mb-2">
-            <p className="text-s uppercase font-bold text-gray-500">Account :</p>
+            <p className="text-s uppercase font-bold text-[#C4BBAF]">Account :</p>
             <p className="text-lg">{user?.email}</p>
           </div>
           <div className="flex flex-row gap-3 items-center">
-            <p className="text-s uppercase font-bold text-gray-500">Kobo Login PIN :</p>
+            <p className="text-s uppercase font-bold text-[#C4BBAF]">Kobo Login PIN :</p>
             <p className="text-lg font-bold tracking-tighter text-black">{user?.loginPin || "000000"}</p>
           </div>
-          <p className="text-xs mt-2 text-gray-600">Enter this 6-digit code on your Kobo's browser login page.</p>
+          <p className="text-xs mt-2 text-[#C4BBAF]">Enter this 6-digit code on your Kobo's browser login page.</p>
         </div>
 
         <div>
-          <h3 className="text-s uppercase font-bold text-gray-500 mb-2">Change Password :</h3>
+          <h3 className="text-s uppercase font-bold text-[#C4BBAF] mb-2">Change Password :</h3>
           <form onSubmit={changePassword} className="flex flex-col gap-3">
             <div className='flex flex-row justify-between align-middle border border-gray-500 rounded bg-white focus-within:ring-2'>
               <input type={showPassword ? 'text' : 'password'} placeholder="New Password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
-                className="rounded p-2 text-sm focus:outline-none" required />
+                className="rounded p-2 text-sm w-max focus:outline-none" required />
               <button type="button" onClick={() => setShowPassword(!showPassword)} 
               className="bg-transparent border-none hover:border-none hover:bg-transparent">
                 {showPassword ? EyeOffIcon : EyeIcon}
               </button>
             </div>
-            <button type="submit" className="bg-[#9D5C63] text-white p-3 font-bold uppercase text-xs max-w-lg hover:border-[#9D5C63] hover:text-[#9D5C63] hover:bg-white hover:transition-colors">Confirm Change</button>
+            <button type="submit" className="bg-[#8D5B4C] text-white p-3 font-bold uppercase text-xs max-w-lg hover:border-[#5A2A27] hover:text-[#8D5B4C] hover:bg-white hover:transition-colors">
+              Confirm Change
+              </button>
             {message.text && (
               <p className={`text-xs font-bold p-2 ${message.isError ? 'bg-red-100' : 'bg-green-100'}`}>
                 {message.text}
@@ -76,8 +73,6 @@ function Profile({ user }) {
             )}
           </form>
         </div>
-
-        <button onClick={logout} className="text-[#9D5C63] p-3 font-bold uppercase text-xs max-w-lg bg-transparent hover:border-[#9D5C63] hover:transition-colors">Log Out</button>
       </div>
     </div>
   );

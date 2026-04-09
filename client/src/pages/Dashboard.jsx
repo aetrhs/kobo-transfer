@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import fallback from '../assets/cover-placeholder.jpg';
+import bookIcon from '../assets/books.png';
 
-function Dashboard() {
+function Dashboard({searchQuery}) {
   const [file, setFile] = useState(null);
   const [books, setBooks] = useState([]);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [uploadError, setUploadError] = useState('');
   const navigate = useNavigate();
+  const [activeMenu, setActiveMenu] = useState(null);
   const getHeaders = () => ({
     Authorization: `Bearer ${localStorage.getItem('token')}`
   });
@@ -36,91 +39,74 @@ function Dashboard() {
     fetchData();
   }, []);
 
-  const handleUpload = async (e) => {
-    e.preventDefault();
-    setUploadError('');
-    if (!file) return alert("Please select a file first");
-
-    const formData = new FormData();
-    formData.append('ebook', file);
-
-    try {
-      const res = await axios.post('/api/books/upload', formData, {
-        headers: {
-          ...getHeaders(),
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-
-      alert("Book uploaded!");
-      if (res.data.book) {
-        setBooks([res.data.book, ...books]);
-      }
-      setFile(null);
-    } catch (err) {
-      const serverMessage = err.response?.data?.message || err.response?.data?.error || "Server error";
-      setUploadError(serverMessage);
-    }
-  };
-
-  const handleDelete = async (e, bookId) => {
-    e.preventDefault();
-
+  const handleDelete = async (bookId) => {
     if (!window.confirm("Are you sure you want to remove this book?")) return;
 
     try {
       const res = await axios.delete(`/api/books/delete/${bookId}`, {
-        headers: getHeaders()
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
-
-      if (res.data.success) {
-        setBooks(books.filter(book => book._id !== bookId));
-      } else {
-        alert("Error deleting book: " + res.data.error);
-      }
+      setBooks(books.filter(b => b._id !== bookId));
+      setActiveMenu(null);
     } catch (err) {
       console.error("Delete book failed:", err);
     }
   };
+  const filteredBooks = books.filter(book => 
+    book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    book.author.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   if (loading) return <div className="p-10 font-bold">Loading...</div>;
 
   return (
     <div className="flex flex-col gap-8 w-full p-5">
-      <div className="p-4 border-2 border-[#E4BB97] rounded">
-        <h3 className="font-bold mb-2">Add E-Book</h3>
-        <form onSubmit={handleUpload} className="flex flex-col gap-3">
-          <input type="file" accept=".epub,.pdf" onChange={(e) => setFile(e.target.files[0])} className="text-sm" />
-          {uploadError && (
-            <p className="text-red-600 font-bold text-sm bg-red-50 p-2 border border-red-200">{uploadError}</p>
-          )}
-          <button type="submit" className="text-sm p-2 font-bold w-full mx-auto max-w-sm">Upload Book</button>
-        </form>
-      </div>
-
       <div>
-        <h2 className="text-xl font-bold mb-4">Available Books</h2>
-        {books.length === 0 ? (
-          <p className="italic text-gray-600">No books found in your account.</p>
+        <div className='flex flex-row items-center gap-2 mb-4'>
+          <img src={bookIcon} alt="Library Icon" className="w-10 h-auto" />
+          <h2 className="text-xl md:text-2xl font-bold">
+            {searchQuery ? `Search Results for "${searchQuery}"` : "My Library"}
+          </h2>
+        </div>
+        <div className='px-5 border-t-4 border-[#8D5B4C] w-[140px]'></div>
+      </div>
+        {filteredBooks.length === 0 ? (
+          <p className="italic text-gray-600">No books found.</p>
         ) : (
-          <div className="flex flex-col gap-2">
-            {books.map((book) => (
-              <div key={book._id}
-                className="flex flex-row gap-1 border-t-2 border-b-0 border-r-0 border-l-0 border-black justify-between items-center group">
-                <div className="flex-1 py-4">
-                  <div className="text-md text-wrap">{book.title}</div>
-                  <div className="text-xs font-medium opacity-70">{book.author}</div>
-                </div>
-
-                <div className='mr-0 flex'>
-                  <button onClick={(e) => handleDelete(e, book._id)}
-                    className="px-6 py-2 font-bold uppercase text-sm cursor-pointer bg-transparent">Remove</button>
-                </div>
+          <div className="flex flex-row flex-wrap gap-6 justify-start">
+            {filteredBooks.map((book) => (
+              <div key={book._id} className="relative flex flex-col group w-full max-w-[160px] lg:max-w-[200px]">
+              <div className="absolute top-2 right-2 z-10 transition-opacity">
+                <button onClick={() => setActiveMenu(activeMenu === book._id ? null : book._id)}
+                  className="bg-white p-1.5 rounded-full shadow-md hover:bg-white text-silver-800">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+                </button>
+                
+                {activeMenu === book._id && (
+                  <div className="absolute right-0 mt-2 w-32 shadow-xl rounded-md overflow-hidden z-20">
+                    <button onClick={() => handleDelete(book._id)}
+                      className="w-full text-left px-4 bg-[#5A2A27] py-2 text-xs
+                      text-white hover:bg-[#8D5B4C] hover:border-[#8D5B4C] font-bold">
+                      Delete Book</button>
+                  </div>
+                )}
               </div>
+              <div className="relative aspect-[2/3] w-full rounded-md shadow-[0_8px_15px_-3px_rgba(0,0,0,0.3)] 
+              border border-[#5A2A27] overflow-hidden transition-transform duration-200 group-hover:-translate-y-2 group-hover:shadow-[0_12px_20px_-5px_rgba(0,0,0,0.4)]">
+                <img src={book.cover || fallback} alt={book.title} 
+                  className="h-full w-full object-cover" onError={(e) => { e.target.src = fallback; }}
+                />
+              </div>
+
+              <div className="mt-4 px-1">
+                <h4 className="text-lg font-bold text-white">{book.title}</h4>
+                <p className="text-sm text-silver-500 uppercase tracking-wider font-medium mt-1">{book.author}</p>
+              </div>
+            </div>
             ))}
           </div>
         )}
-      </div>
     </div>
   );
 }

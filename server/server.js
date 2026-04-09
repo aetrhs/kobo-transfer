@@ -16,7 +16,8 @@ app.use(cors({
   },
   credentials: true
 }));
-// app.use('/api/covers', express.static(path.join(__dirname, 'uploads/covers')));
+app.use('/covers', express.static(path.join(__dirname, 'uploads/covers')));
+// app.use('/covers', express.static('/app/uploads/covers'));
 
 // routes
 const authRoutes = require('./routes/authRoutes');
@@ -34,7 +35,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/books', bookRoutes);
 app.use('/uploads', express.static('uploads'));
 
-// make sure /uploads actually exist
+// make sure /uploads actually exist, if not create it
 if (!fs.existsSync(uploadDir)){
   fs.mkdirSync(uploadDir);
 }

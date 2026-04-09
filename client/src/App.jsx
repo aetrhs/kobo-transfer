@@ -5,26 +5,40 @@ import Signup from './pages/Signup.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Profile from './pages/Profile.jsx';
 import userIcon from './assets/user.png';
+import Sidebar from './pages/Sidebar.jsx';
+import Upload from './pages/Upload.jsx';
 
-function Navbar({ user }) {
+function Navbar({ user, toggleSidebar, searchQuery, setSearchQuery}) {
   const navigate = useNavigate();
   const token = localStorage.getItem('token');
 
+  //hide navbar if no token (not logged in)
+  if (!token) {
+    return null;
+  }
+
   return (
-    <nav className="w-full py-4 bg-[#D6E3F8] flex flex-row gap-10 justify-between items-center px-5 md:px-10 xl:px-60 border-b-2 border-[#bcd1f3]">
-      {!token ? (
+    <nav className="w-full py-4 bg-[#5C4742] flex flex-row gap-10 justify-between items-center px-5">
+      <button onClick={toggleSidebar} className="p-2 bg-transparent hover:text-white hover:border-none rounded-md md:hidden cursor-pointer">
+        <svg className="w-6 h-6 text-silver-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
         <>
-          <Link to="/">Login</Link>
-          <Link to="/signup">Signup</Link>
-        </>
-      ) : (
-        <>
-          <Link to="/dashboard" className="font-bold">My Library</Link>
-          <Link to="/profile" className="">
-            <img src={userIcon} alt="User" className="w-6 h-6" />
+        <div className="flex items-center gap-10 flex-1 max-w-md mx-4">
+            <div className="relative w-full max-w-md">
+              <input type="text"placeholder="Search Book" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full p-2 pl-10 rounded-full boder-none bg-[#C4BBAF] placeholder:text-white placeholder:font-bold focus:outline-none focus:ring-2 focus:ring-[#C4BBAF] text-s text-[#5A2A27]"
+              />
+              <svg className="absolute left-3 top-2.5 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+          </div>
+          <Link to="/profile" className="flex-shrink-0">
+            <img src={userIcon} alt="User" className="w-10 h-auto" />
           </Link>
         </>
-      )}
     </nav>
   );
 }
@@ -32,7 +46,9 @@ function Navbar({ user }) {
 function App() {
   const [user, setUser] = useState(null);
   const token = localStorage.getItem('token');
-
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
   // get user data
   useEffect(() => {
     const fetchUser = async () => {
@@ -51,15 +67,17 @@ function App() {
 
   return (
     <Router>
-      <div className="flex flex-col min-h-screen items-center">
-        <Navbar user={user} />
-        <main className="flex w-full max-w-4xl">
+      <div className="flex flex-row min-h-screen overflow-hidden">
+        <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
+        <main className="flex flex-col h-auto w-full mx-auto top-0">
+          <Navbar user={user} toggleSidebar={toggleSidebar} searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
           <Routes>
             <Route path="/" element={token ? <Navigate to="/dashboard" /> : <Login />} />
             <Route path="/login" element={token ? <Navigate to="/dashboard" /> : <Login />} />
             <Route path="/signup" element={<Signup />} />
-            <Route path="/dashboard" element={<Dashboard user={user} />} />
+            <Route path="/dashboard" element={<Dashboard user={user} searchQuery={searchQuery} />} />
             <Route path="/profile" element={<Profile user={user} />} />
+            <Route path="/upload" element={<Upload />} />
           </Routes>
         </main>
       </div>
@@ -105,12 +123,6 @@ function Login() {
     const payload = isKobo ? { pin: pin.trim().toUpperCase() } : { email: email.trim().toLowerCase(), password: password };
     try {
       const res = await axios.post('/api/auth/login', payload);
-      // todo: remove this log
-      console.log('login details entered', {
-        email: res.data.user?.email,
-        pin: res.data.user?.pin,
-        success: res.data.success
-      });
 
       if (res.data.success) {
         localStorage.setItem('token', res.data.token);

@@ -23,10 +23,17 @@
     }
 
     #user-section {
+      display: -webkit-flex;
       display: flex;
+      -webkit-justify-content: space-between;
       justify-content: space-between;
+      -webkit-align-items: center;
       align-items: center;
       border-bottom: 1px solid #ddd;
+    }
+
+    #user-section p {
+      margin: 0;
     }
 
     #logout-btn {
@@ -60,6 +67,14 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+
+      /* for kobo */
+      display: -webkit-box;
+      display: -webkit-flex;
+      -webkit-box-pack: justify;
+      -webkit-justify-content: space-between;
+      -webkit-box-align: center;
+      -webkit-align-items: center;
     }
 
     li:last-child {
@@ -72,8 +87,14 @@
       padding: 5px 10px;
       border-radius: 4px;
       font-size: 1rem;
+
+      margin-left: auto; 
+      display: inline-block;
     }
 
+    .book-title {
+      padding-right: 10px;
+    }
     #status {
       margin-top: 50px;
       font-size: 0.8rem;
@@ -89,7 +110,7 @@
 <body>
 
   <div id="login-div">
-    <h2>Kepub Sync Login</h2>
+    <h2>Kobo Sync Login</h2>
     <p>Enter login PIN to access your library:</p>
     <input type="text" id="pin-input" placeholder="000000" maxlength="6">
     <br>
@@ -102,7 +123,10 @@
       <button id="logout-btn" onclick="logout()">Log out</button>
     </div>
     <div id="main-library">
-      <h2>My Books</h2>
+      <div style="display: flex; align-items: center; gap:5px; margin: 20px 0; justify-content: center;">
+        <!-- <img src="/src/assets/books.png" style="width: 40px; height: auto;"> -->
+        <h2 style="margin: 0;">My Library</h2>
+      </div>
       <ol id="book-list"></ol>
     </div>
     
