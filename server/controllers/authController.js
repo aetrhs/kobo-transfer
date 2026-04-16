@@ -94,7 +94,7 @@ exports.login = async (req, res) => {
     if (!user) {
       return res.status(401).json({
         success: false,
-        error: 'Invalid credentials. Please try again.'
+        error: 'Invalid user details. Please try again.'
       });
     }
 

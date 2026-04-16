@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { BrowserRouter as Router, Routes, Route, Navigate, Link, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Link, useNavigate, useLocation } from 'react-router-dom';
 import Signup from './pages/Signup.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Profile from './pages/Profile.jsx';
@@ -139,32 +139,62 @@ function Login() {
     }
   };
 
+  const location = useLocation();
+  const isLoginPath = location.pathname === '/';
+
   return (
-    <div className="w-full max-w-md m-auto mt-10 px-10 text-center">
-      <h2 className="text-xl text-[#9D5C63] mb-6 font-bold">Account Login </h2>
-
-      <form onSubmit={loginFunc} className="flex flex-col gap-4">
-        <>
-          <input type="email" placeholder="Email Address" className="p-2 border border-gray-500 rounded" onChange={(e) => setEmail(e.target.value)} required />
-          <div className='flex flex-row justify-between align-middle border border-gray-500 rounded bg-white focus-within:ring-2'>
-            <input type={showPassword ? 'text' : 'password'} placeholder="Password" 
-              className="h-auto p-2 rounded focus:outline-none" 
-              onChange={(e) => setPassword(e.target.value)} required />
-            <button type="button" onClick={() => setShowPassword(!showPassword)} 
-            className="bg-transparent border-none hover:border-none hover:bg-transparent">
-              {showPassword ? EyeOffIcon : EyeIcon}
-            </button>
+    <div className="w-full max-w-md m-auto px-10 text-center flex flex-col gap-6">
+      <div className='flex flex-col gap-1'>
+        <p className='font-medium'>KoboSync</p>
+        <p className='font-bold text-4xl'>Welcome Back</p>
+        <p>Login to access your e-books.</p>
+      </div>
+      <div className='flex flex-col gap-3 bg-white py-4 px-10 rounded-t-3xl rounded-b-3xl shadow'>
+          <div className='bg-gray-400 bg-opacity-20 p-1 flex flex-row gap-2 justify-center border border-gray rounded-full items-center mb-4'>
+            <Link to="/" className={`py-2 px-4 text-sm font-bold w-1/2 rounded-full transition-all duration-300 ${
+                isLoginPath 
+                  ? 'bg-white shadow text-[#9D5C63] opacity-100' 
+                  : 'bg-transparent text-gray-400 opacity-50'
+              }`}>
+              Login
+            </Link>
+            <Link to="/signup" 
+              className={`py-2 px-4 text-sm font-bold w-1/2 rounded-full transition-all duration-300 ${
+                !isLoginPath 
+                  ? 'bg-white shadow text-[#9D5C63] opacity-100' 
+                  : 'bg-transparent text-gray-400 opacity-50'
+              }`}>
+              Register
+            </Link>
           </div>
-        </>
+          <form onSubmit={loginFunc} className="flex flex-col gap-5">
+            <div className="flex flex-col gap-1">
+              <label className="text-left text-xs uppercase tracking-widest font-bold text-[#9D5C63] ml-1">Email Address</label>
+              <input type="email" placeholder="e.g. user@gmail.com" 
+                className="p-3 text-black border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#9D5C63] focus:outline-none transition-all placeholder:text-gray-300" 
+                onChange={(e) => setEmail(e.target.value)} required 
+              />
+            </div>
 
-        <button type="submit" className="p-3 font-bold uppercase hover:transition-colors" >Log In </button>
-      </form>
+            <div className="flex flex-col gap-1">
+              <label className="text-left text-xs uppercase tracking-widest font-bold text-[#9D5C63] ml-1">Password</label>
+              <div className='flex flex-row justify-between items-center border border-gray-200 rounded-xl bg-white focus-within:ring-2 focus-within:ring-[#9D5C63] transition-all'>
+                <input type={showPassword ? 'text' : 'password'} placeholder="••••••••"
+                  className="w-full p-3 rounded-xl text-black focus:outline-none placeholder:text-gray-300"
+                  onChange={(e) => setPassword(e.target.value)} required 
+                />
+                <button type="button" onClick={() => setShowPassword(!showPassword)}
+                  className="bg-transparent border-none pr-4 text-gray-300 hover:text-[#9D5C63] hover:border-none transition-colors">
+                  {showPassword ? EyeOffIcon : EyeIcon}
+                </button>
+              </div>
+            </div>
 
-      {!isKobo && (
-        <p className="mt-6 text-sm">
-          No account? <Link to="/signup" className="underline font-bold">Register here</Link>
-        </p>
-      )}
+            <button type="submit" className="mt-2 p-4 bg-[#9D5C63] text-white rounded-full font-bold uppercase hover:bg-[#8a4b52] transition-all shadow-md active:scale-95">
+              Sign In
+            </button>
+          </form>
+      </div>
     </div>
   );
 }

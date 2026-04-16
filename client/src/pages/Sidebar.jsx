@@ -39,11 +39,11 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={toggleSidebar}/>
     )}
 
-    <div className={`fixed top-0 left-0 h-full w-52 md:w-64 lg:w-72 bg-[#A5978B] z-50 transition-transform duration-300 transform
+    <div className={`fixed top-0 left-0 h-full w-52 md:w-64 lg:w-72 bg-[#A5978B] md:rounded-tr-[50px] shadow-lg z-50 transition-transform duration-300 transform
       ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 md:static md:h-screen`}>
-      <div className="p-5 font-bold text-xl flex flex-row justify-center items-center">
+      <div className="p-5 font-bold text-xl flex flex-row justify-between items-center">
         <p className='!text-[#5A2A27]'>KoboSync</p>
-        <button onClick={toggleSidebar} className="md:hidden font-bold text-[#5C4742]">✕</button>
+        <button onClick={toggleSidebar} className="md:hidden font-black text-[#5C4742] p-0">✕</button>
       </div>
       <nav className='flex flex-col gap-2 px-3'>
         {menuItems.map((item) => {

@@ -47,7 +47,7 @@ function Profile({ user }) {
           </div>
           <div className="flex flex-row gap-3 items-center">
             <p className="text-s uppercase font-bold text-[#C4BBAF]">Kobo Login PIN :</p>
-            <p className="text-lg font-bold tracking-tighter text-black">{user?.loginPin || "000000"}</p>
+            <p className="text-lg font-bold tracking-tighter">{user?.loginPin || "000000"}</p>
           </div>
           <p className="text-xs mt-2 text-[#C4BBAF]">Enter this 6-digit code on your Kobo's browser login page.</p>
         </div>

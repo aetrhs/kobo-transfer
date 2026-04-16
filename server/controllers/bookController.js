@@ -105,7 +105,11 @@ const extractCover = (filePath, bookId) => {
 
 exports.uploadBook = (req, res) => {
   upload(req, res, async (err) => {
-    if (err) return res.status(500).json({ error: err.message });
+    if (err) return res.status(400).json({ message: err.message });
+
+    if (!req.file) {
+      return res.status(400).json({ message: "No file provided or file type rejected." });
+    }
     const bookId = req.file.filename.split('-')[0];
     const originalName = req.file.originalname;
     const extension = path.extname(originalName).toLowerCase();
