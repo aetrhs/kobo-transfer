@@ -1,11 +1,19 @@
 FROM node:20-alpine
-WORKDIR /app
 
-COPY package*.json ./
+# client
+WORKDIR /app/client
+COPY client/package*.json ./
 RUN npm install
+COPY client/ ./
+RUN npm run build
 
-COPY . .
+# server
+WORKDIR /app/server
+COPY server/package*.json ./
+RUN npm install
+COPY server/ ./
 
+# kepubify
 RUN apk update && apk add --no-cache wget libc6-compat
 RUN wget -O /usr/local/bin/kepubify https://github.com/pgaskin/kepubify/releases/latest/download/kepubify-linux-64bit \
     && chmod +x /usr/local/bin/kepubify
