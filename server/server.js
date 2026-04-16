@@ -23,7 +23,7 @@ app.use('/covers', express.static(path.join(__dirname, 'uploads/covers')));
 const authRoutes = require('./routes/authRoutes');
 const bookRoutes = require('./routes/bookRoutes');
 
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://mongodb:27017/kobo_library';
+const MONGO_URI = process.env.MONGO_URI;
 
 // connect w kobo at 27017
 mongoose.connect(MONGO_URI)
