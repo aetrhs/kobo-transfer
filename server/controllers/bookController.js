@@ -199,7 +199,7 @@ exports.download = async (req, res) => {
     console.log('book requested: ', book);
     if (!book) return res.status(404).json({ error: "Book not found" });
 
-    const uploadDir = '/app/uploads';
+    const uploadDir = path.join(__dirname, '../uploads');
     const originalFilePath = path.join(uploadDir, book.fileName);
 
     const cleanFileName = book.fileName.includes('-')
@@ -269,7 +269,7 @@ exports.deleteBook = async (req, res) => {
     const book = await Book.findById(id);
     if (!book) return res.status(404).json({ error: "Book not found" });
 
-    const uploadDir = '/app/uploads';
+    const uploadDir = path.join(__dirname, '../uploads');
     const filePath = path.join(uploadDir, book.fileName);
 
     if (fs.existsSync(filePath)) {
