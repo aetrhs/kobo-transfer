@@ -85,7 +85,7 @@ const extractCover = (filePath, bookId) => {
         const ext = mimeType.split('/')[1] || 'jpg';
         const coverFilename = `cover_${bookId}.${ext}`;
         
-        const targetDir = '/app/uploads/covers'; 
+        const targetDir = path.join(__dirname, '../uploads/covers');
         const finalPath = path.join(targetDir, coverFilename);
 
         if (!fs.existsSync(targetDir)) {
