@@ -3,8 +3,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const fs = require('fs');
-const uploadDir = './uploads';
 const path = require('path');
+const uploadDir = path.join(__dirname, 'uploads');
 
 const app = express();
 
