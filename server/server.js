@@ -5,6 +5,7 @@ const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 const uploadDir = path.join(__dirname, 'uploads');
+const coversDir = path.join(__dirname, 'uploads/covers');
 
 const app = express();
 
@@ -39,7 +40,9 @@ app.use('/uploads', express.static('uploads'));
 if (!fs.existsSync(uploadDir)){
   fs.mkdirSync(uploadDir);
 }
-
+if (!fs.existsSync(coversDir)){
+  fs.mkdirSync(coversDir, { recursive: true });
+}
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
